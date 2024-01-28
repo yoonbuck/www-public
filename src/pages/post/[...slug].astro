@@ -1,0 +1,143 @@
+---
+import { getCollection } from "astro:content";
+import Standard from "../../layouts/Standard.astro";
+import DateFormat from "../../components/DateFormat.svelte";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  return posts.map((entry) => ({
+    params: {
+      slug: entry.slug,
+    },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { title, date, description, tags } = entry.data;
+const { Content, headings } = await entry.render();
+---
+
+<Standard
+  title={title}
+  breadcrumbs={{
+    crumbs: [["/posts", "Posts"]],
+    tags,
+  }}
+  headings={headings}
+>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+    integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV"
+    crossorigin="anonymous"
+    slot="in-head"
+  />
+  {
+    description && (
+      <>
+        <meta name="description" content={description} slot="in-head" />
+        <meta name="og:description" content={description} slot="in-head" />
+      </>
+    )
+  }
+  <p class="date">
+    <DateFormat format="dayMonthYear" date={date} client:idle />
+  </p>
+  {description && <p class="description">{description}</p>}
+  <article>
+    <Content />
+  </article>
+  <!-- {JSON.stringify(headings)} -->
+  <hr class="end" slot="after-content" />
+  <section class="giscus" slot="after-content"></section>
+  <script
+    src="https://giscus.app/client.js"
+    data-repo="yoonbuck/www-discuss"
+    data-repo-id="R_kgDOLG09BQ"
+    data-category="Comments"
+    data-category-id="DIC_kwDOLG09Bc4Cch-R"
+    data-mapping="pathname"
+    data-strict="1"
+    data-reactions-enabled="1"
+    data-emit-metadata="1"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="en"
+    data-loading="lazy"
+    crossorigin="anonymous"
+    async></script>
+</Standard>
+
+<style lang="scss">
+  @use "../../styles/type.scss";
+  @use "../../styles/space.scss";
+  @use "../../styles/color.scss";
+
+  h1.title {
+    margin: space.sp(8) 0 space.sp(1) 0;
+    @include type.scale(4);
+  }
+
+  h2 {
+    margin: space.sp(3) 0 space.sp(1) 0;
+    @include type.scale(2);
+  }
+
+  .description {
+    color: color.$secondary;
+    word-wrap: pretty;
+  }
+
+  hr.end {
+    &:before {
+      @include type.scale(3);
+      content: "            ";
+      text-decoration: underline;
+      text-decoration-style: wavy;
+      line-height: 0;
+    }
+    text-align: center;
+    overflow: visible;
+    text-wrap: none;
+    border: 0;
+    margin: space.sp(6) 0;
+  }
+</style>
+<style is:global lang="scss">
+  @use "../../styles/type.scss";
+  @use "../../styles/space.scss";
+  @use "../../styles/color.scss";
+  p,
+  ul,
+  ol {
+    margin-bottom: space.sp(0);
+  }
+
+  a {
+    color: color.$link;
+    &:visited {
+      color: color.$link-visited;
+    }
+  }
+
+  h1 {
+    @include type.scale(3);
+    margin: space.sp(6) 0 space.sp(1) 0;
+  }
+
+  h2 {
+    @include type.scale(2);
+    margin: space.sp(4) 0 space.sp(1) 0;
+  }
+
+  h3 {
+    @include type.scale(1);
+    margin: space.sp(3) 0 space.sp(1) 0;
+  }
+
+  p {
+    @include type.scale(0);
+    margin: 0 0 space.sp(1) 0;
+  }
+</style>

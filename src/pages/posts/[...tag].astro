@@ -1,0 +1,22 @@
+---
+import PostsList from "../../components/PostsList.astro";
+import Standard from "../../layouts/Standard.astro";
+
+import { getTags } from "../../content/posts/tags";
+
+export async function getStaticPaths() {
+  return (await getTags()).map((tag) => ({
+    params: { tag },
+    props: { tag },
+  }));
+}
+
+const { tag } = Astro.props;
+---
+
+<Standard
+  title={`Posts tagged #${tag}`}
+  breadcrumbs={{ crumbs: [["/posts", "Posts"]] }}
+>
+  <PostsList byTag={tag} />
+</Standard>

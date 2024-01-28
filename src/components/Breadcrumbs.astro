@@ -1,0 +1,75 @@
+---
+interface Props {
+  crumbs?: [string, string][];
+  tags?: string[] | undefined;
+  tagPrefix?: string;
+  tagsOnly?: boolean;
+}
+const {
+  crumbs = [],
+  tags = [],
+  tagPrefix = "/posts/",
+  tagsOnly = false,
+} = Astro.props;
+---
+
+<nav class="breadcrumbs" class:list={tagsOnly ? "tagsOnly" : ""}>
+  {
+    !tagsOnly && (
+      <>
+        <a href="/">Jordan Yoon-Buck</a>
+        {crumbs.map(([path, name]) => (
+          <>
+            <span>›</span>
+            <a href={path}>{name}</a>
+          </>
+        ))}
+      </>
+    )
+  }
+  {
+    tags.length > 0 && (
+      <>
+        <span>#</span>
+        {tags.map((tag) => (
+          <a href={`${tagPrefix}${tag}`}>{tag}</a>
+        ))}
+      </>
+    )
+  }
+</nav>
+
+<style lang="scss">
+  @use "../styles/type.scss";
+  @use "../styles/space.scss";
+  @use "../styles/color.scss";
+  .breadcrumbs {
+    @include type.scale(0);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 space.sp(-3);
+    color: color.$secondary;
+    span {
+      opacity: 0.75;
+    }
+    margin: 0 calc(-#{space.sp(-2)}) space.sp(1);
+    &.tagsOnly {
+      margin-left: 0;
+    }
+    a {
+      text-decoration: none;
+      padding: space.sp(-1) space.sp(-2);
+      border-radius: space.sp(-2);
+      line-height: 1;
+      color: color.$secondary;
+      background: transparent;
+      &:hover {
+        text-decoration: underline;
+        text-decoration-style: wavy;
+        color: color.$link;
+        background: color.$background-secondary;
+      }
+    }
+  }
+</style>

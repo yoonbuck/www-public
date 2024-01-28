@@ -1,0 +1,46 @@
+@use "sass:math";
+
+$min-font-size: -2;
+$max-font-size: 8;
+
+$font-stack-v0: "Inter";
+$font-stack-v1: "Inter var", "Inter";
+$font-stack-rem: system-ui, "Segoe UI", Helvetica, Arial, sans-serif,
+  "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji";
+
+@mixin init-font {
+  font-family: $font-stack-v0, $font-stack-rem;
+  @supports (font-variation-settings: normal) {
+    font-family: $font-stack-v1, $font-stack-rem;
+  }
+}
+
+@mixin init-text-size {
+  --user-font-scaling-offset: calc(1rem - 16px);
+  font-size: 1rem;
+  font-size: calc(
+    clamp(14px, 0.5rem + 1vw, 20px) + var(--user-font-scaling-offset)
+  );
+}
+
+$fs-base: 1rem;
+$fs-scaling-ratio: math.div(5, 4);
+
+$lh-base: 1.8;
+$lh-scaling-ratio: math.div(4, 5);
+
+@function fs($n) {
+  @return $fs-base * math.pow($fs-scaling-ratio, $n);
+}
+
+@function lh($n) {
+  @return 1 + ($lh-base - 1) * math.pow($lh-scaling-ratio, $n);
+}
+
+@mixin scale($n) {
+  @if ($n < $min-font-size or $n > $max-font-size) {
+    @warn "a11y: text scaling should be between #{$min-font-size} and #{$max-font-size}";
+  }
+  font-size: fs($n);
+  line-height: lh($n);
+}

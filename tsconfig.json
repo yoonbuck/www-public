@@ -1,0 +1,10 @@
+{
+  "extends": "astro/tsconfigs/strictest",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "node"
+  },
+  "mdx": {
+    "plugins": [["remark-frontmatter", ["yaml"]]]
+  }
+}

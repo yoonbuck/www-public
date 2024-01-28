@@ -1,0 +1,217 @@
+---
+title: "Contrast preserving color inversion"
+date: 2024-01-28
+description: Seeking an approach to color inversion that preserves contrast ratios between colors.
+# tags: [color]
+---
+
+import Demo from "./Demo.svelte";
+import Info from "../../../components/Info.astro";
+import Spoiler from "../../../components/Spoiler.svelte";
+
+# Introduction
+
+Color inversion is a common accessibility feature that inverts the colors of a display, often making it easier to read in a dark environment, for example, by turning white text on a black background into black text on a white background.
+
+In this post, I explore conventional approaches to color inversion and propose a new approach that preserves both hue and contrast ratios between colors.
+
+# Existing approaches
+
+Two common approaches to color inversion are RGB inversion and lightness inversion.
+
+## RGB inversion
+
+The simplest approach to color inversion is to simply invert each channel of an RGB color.
+
+<Info>
+
+In this post, we're working in sRGB color, which is the standard space for representing colors on the web. Note that as a convention, I will refer to all color components as ranging from 0 to 1, even though they are typically represented as integers from 0 to 255--this is called "8-bit color" because each component is represented with 8 bits.
+
+</Info>
+
+RGB inversion is straightforward: each channel is simply inverted independently.
+
+$$
+\begin{align*}
+R_{\text{inverted}} &= 1 - R \\
+G_{\text{inverted}} &= 1 - G \\
+B_{\text{inverted}} &= 1 - B
+\end{align*}
+$$
+
+While this type of inversion is easy to implement and very efficient, it comes with a large usability drawback: hues are rotated by 180, which makes it difficult to recognize colors.
+
+Use the widget below to see how RGB inversion affects hues. You can click the color swatches on the left (or above, on smaller screens) to change the colors.
+
+<Demo strategy="naive" client:idle />
+
+## Lightness inversion
+
+To fix this hue rotation problem, we can instead invert the lightness of the color, while preserving the hue and saturation. To do this, we convert the color to [HSL color space] (a cylindrical representation of RGB), invert the lightness, and then convert back to RGB. In HSL, the inversion is simply:
+
+[HSL color space]: https://en.wikipedia.org/wiki/HSL_and_HSV
+
+$$
+\begin{align*}
+H_{\text{inverted}} &= H \\
+S_{\text{inverted}} &= S \\
+L_{\text{inverted}} &= 1 - L
+\end{align*}
+$$
+
+This approach is still fairly simple and works well to enable color recognition. In fact, this appears to be the strategy used by Android when the color inversion accessibility feature is turned on.
+
+<Info>
+
+iOS and macOS have an accessibility feature called "Smart" color inversion mode, but it is not lightness inversion--instead, it is standard RGB inversion that avoids inverting images and videos so that their colors are not distorted.
+
+</Info>
+
+However, lightness inversion still has one issue: it distorts the contrast ratios between colors. This is because contrast ratio is not simply the difference in lightness between two colors, but rather a more complex calculation that will be explored in the next section.
+
+Use the widget below to see how lightness inversion affects colors and their contrast ratios.
+
+<Demo strategy="lightness" client:idle />
+
+With these two approaches in mind, let's search for a way to invert colors that preserves both hue and contrast ratios between colors.
+
+# Color contrast
+
+To find a way to preserve contrast ratios between colors, we first need to understand how contrast ratios are calculated. The contrast ratio between two colors is (surprise!) a ratio based on the relative luminance of the colors:
+
+$$
+\text{contrast ratio} = \frac{L_{\text{lighter}} + 0.05}{L_{\text{darker}} + 0.05}
+$$
+
+where $$L_{\text{lighter}}$$ is the relative luminance of the lighter color and $$L_{\text{darker}}$$ is the relative luminance of the darker color.
+
+Relative luminance is a measure of the perceived brightness of a color, and is defined as follows:
+
+$$
+L = 0.2126 \times \bold R + 0.7152 \times \bold G + 0.0722 \times \bold B
+$$
+
+<Info>
+Watch out! The terms $$\bold R$$, $$\bold G$$, and $$\bold B$$ are not the same as the terms $$R$$, $$G$$, and $$B$$ used in the RGB inversion calculation in the previous section. These are the linear or ["gamma-expanded"][gamma-expansion] versions of the RGB components, which are calculated as follows:
+
+$$
+\bold C_{\text{(linear)}} = \begin{cases}
+C_{\text{(sRGB)}} / 12.92 & C_{\text{(sRGB)}} \le 0.04045 \\
+\left(\frac{C_{\text{(sRGB)}} + 0.055}{1.055}\right)^{2.4} & C_{\text{(sRGB)}} > 0.04045
+\end{cases}
+$$
+
+Where $$C_{\text{(sRGB)}}$$ is the sRGB component ($$R$$, $$G$$, or $$B$$), and $$\bold C_{\text{(linear)}}$$ is the resulting linear component ($$\bold R$$, $$\bold G$$, or $$\bold B$$) used in the relative luminance equation.
+
+</Info>
+
+[gamma-expansion]: https://en.wikipedia.org/wiki/SRGB#From_sRGB_to_CIE_XYZ
+
+As you can see, calculating a contrast ratio is fairly involved: we need to convert the colors to linear RGB, take a weighted sum to find the relative luminance, and then use that to calculate the contrast ratio.
+
+<Info>
+
+These definitions for [relative luminance][WCAG-luminance] and [contrast ratio][WCAG-contrast] can be found in the Web Content Accessibility Guidelines (WCAG) 2.2 specification.
+
+</Info>
+
+[WCAG-luminance]: https://www.w3.org/TR/WCAG22/#dfn-relative-luminance
+[WCAG-contrast]: https://www.w3.org/TR/WCAG22/#dfn-contrast-ratio
+
+# Algorithm
+
+With these definitions in mind, we can now start to define a strategy for inverting colors that preserves contrast ratios between colors.
+
+Feel free to skip the math and go straight to the [demo](#demo) if you're not interested in the details.
+
+## Scaffolding
+
+First, we make a few observations:
+
+- The contrast ratio between two colors only depends on their relative luminance.
+- For any given color, we can adjust its relative luminance by changing its lightness in HSL color space, while preserving its hue and saturation.
+  - At a minimum, we can achieve a relative luminance of 0 by setting the lightness to 0, and similarly we can achieve a relative luminance of 1 by setting the lightness to 1.
+  - Relative luminance is monotonic with respect to lightness.
+  - Therefore, for any given color, we can achieve any relative luminance between 0 and 1 by adjusting its lightness between 0 and 1.
+
+This suggests that we only need to find a way to "invert" relative luminance that preserves the result of the contrast ratio calculation. Based on this, we can outline a strategy for inversion:
+
+1. Get the color's relative luminance.
+2. Calculate the inverted relative luminance. (We still need to figure out how to do this.)
+3. Apply the inverted relative luminance to the color.
+
+## Inverting relative luminance
+
+Finding a way to invert relative luminance boils down to a math problem:
+
+- We're seeking some function $$f : \left[0,1\right] \rarr \left[0,1\right]$$.
+- We want $$f$$ to actually flip the relative lightness of two colors, so if $$L_1 \ge L_2$$, it should be true that $$f(L_1) \le f(L_2)$$.
+- We want $$f$$ to preserve the result of the contrast ratio calculation, so that for all $$L_1 \ge L_2$$, $$\frac{L_1 + 0.05}{L_2 + 0.05} = \frac{f(L_1) + 0.05}{f(L_2) + 0.05}$$.
+
+I found this to be pretty tricky, and spent most of an evening working on this problem with some help from a friend. (I knew my one-class-short-of-a-math-minor would come in handy one day!)
+
+If you're interested in this sort of thing, I think it's worth giving it a go.
+
+I made a few additional observations that helped point me in the right direction:
+
+<Spoiler client:idle>
+
+- We can see from the requirements at the boundaries that $$f(0) = 1$$ and $$f(1) = 0$$
+- $$f$$ is continuous, bijective, and monotonically decreasing
+- $$f$$ is actually its own inverse; that is, $$f(f(L)) = L$$
+
+</Spoiler>
+
+And here is my solution:
+
+<Spoiler client:idle>
+
+I first observed that the function $$g(L)=\left(\frac{1}{L + 0.05} - 0.05\right)$$ has most of the desired properties but the wrong output range. Scaling and shifting this function to the appropriate range gives:
+
+$$
+f(L) = \left(\frac{1}{L + 0.05} - 0.05\right) \times \frac{21}{400} - \frac{379}{8000}
+$$
+
+I originally stopped there, but later found (via [WolframAlpha]) that this simplified neatly to:
+
+$$
+f(L) = \frac{1 - L}{20L + 1}
+$$
+
+</Spoiler>
+
+[WolframAlpha]: https://www.wolframalpha.com/input?i=%281%2F%28x%2B%281%2F20%29%29-%281%2F20%29%29*21%2F400-379%2F8000
+
+The remaining step is to "apply" the inverted relative luminance back to the original earlier. For the demo on this page, I do this by iteratively fine-tuning the lightness of the color until the resulting relative luminance is within an acceptable threshold of the target relative luminance.
+
+It seems quite possible there is a more efficient way to do this, which I will leave as an exercise for the reader.
+
+## Demo
+
+As before, this widget demonstrates the effect of the new inversion algorithm on colors and their contrast ratios.
+
+<Demo strategy="contrast-preserving" client:idle />
+
+It's not perfect--the contrast ratios are often off by a small amount, but this is due to the limited precision of the 8-bit sRGB color that we need to convert back to in the end, before calculating the results. Note, for example, that shifting even one color component by 1 bit (1/256th) often changes the contrast ratio by several hundredths. In theory, the contrast ratios could be identical in a higher precision color space.
+
+The code used to implement the algorithm in this demo [is available here][gist].
+
+[gist]: https://gist.github.com/yoonbuck/c8cfd26245d8e2d6b6870b396dc450b2
+
+# Applications
+
+I believe the primary use case for this new inversion approach is inverting colors to facilitate "dark mode" content themes. In particular, contrast preserving color inversion can be used to invert documents or other user-generated content.
+
+For example, a word processing document could provide an inverted mode to facilitate comfortable reading in a dark environment, with background and text colors inverted, but with images and other content left unaltered, and without reducing accessibility by changing the contrast ratios between colors as other inversion approaches do.
+
+Or, a browser extension could use this algorithm to invert colors on web pages in a way that preserves the contrast ratios between colors.
+
+I'm not sure whether this approach would be too slow to be used for real-time display inversion (such as the accessibility features found in most operating systems). For 8-bit color, it seems that it should be possible to precompute the inverted colors and store them in a lookup table, so this could be a practical solution. I plan to do further investigations to understand the feasibility of such a tool and whether the output is acceptable.
+
+<Info>
+
+This approach is specifically tuned to preserve contrast ratios between colors in the sRGB color space based on the relative luminance and contrast ratio calculations defined in the WCAG 2.2 specification. These calculations have changed slightly from past versions, but the result is unaffected. It is likely unsuitable for wider color spaces or where different calculations are required.
+
+As always, you should consult with accessibility experts as well as users when designing accessibility features or where compliance with specific standards is required.
+
+</Info>

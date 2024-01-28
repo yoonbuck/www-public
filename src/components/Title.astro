@@ -1,0 +1,9 @@
+<h1><slot /></h1>
+<style lang="scss">
+  @use "../styles/type.scss";
+  @use "../styles/space.scss";
+  h1 {
+    @include type.scale(4);
+    margin: space.sp(1) 0;
+  }
+</style>

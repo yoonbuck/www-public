@@ -1,0 +1,79 @@
+---
+import { getCollection } from "astro:content";
+import Standard from "../../layouts/Standard.astro";
+
+export async function getStaticPaths() {
+  const recipes = await getCollection("recipes");
+  return recipes.map((entry) => ({
+    params: {
+      slug: entry.slug,
+    },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { title, ingredients, description } = entry.data;
+const { Content } = await entry.render();
+---
+
+<Standard title={title} breadcrumbs={{ crumbs: [["/cookbook", "Cookbook"]] }}>
+  {description && <p class="description">{description}</p>}
+  <h2>Ingredients</h2>
+  <ul>
+    {
+      ingredients.map((ingredient) => (
+        <li class="ingredient">
+          {[
+            ingredient.amount && `${ingredient.amount} `,
+            ingredient.name,
+            ingredient.detail && (
+              <>
+                {", "}
+                <span class="detail">{ingredient.detail}</span>
+              </>
+            ),
+          ]}
+        </li>
+      ))
+    }
+  </ul>
+  <h2>Instructions</h2>
+  <Content />
+</Standard>
+
+<style lang="scss">
+  @use "../../styles/type.scss";
+  @use "../../styles/space.scss";
+  @use "../../styles/color.scss";
+
+  .description {
+    color: color.$secondary;
+    word-wrap: pretty;
+  }
+
+  h2 {
+    margin: space.sp(3) 0 space.sp(1) 0;
+    @include type.scale(2);
+  }
+
+  .detail {
+    font-style: italic;
+  }
+
+  ol,
+  ul {
+    padding-left: space.sp(2);
+  }
+
+  :global(p) {
+    margin-bottom: space.sp(0);
+  }
+
+  :global(a) {
+    color: color.$link;
+    &:visited {
+      color: color.$link-visited;
+    }
+  }
+</style>

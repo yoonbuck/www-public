@@ -1,0 +1,13 @@
+@use "sass:math";
+
+// $min-sp-size: -4;
+// $max-sp-size: 10;
+
+$sp-scaling-ratio: math.div(4, 3);
+$sp-base: 1rem;
+
+@function sp($n) {
+  @return $sp-base * math.pow($sp-scaling-ratio, $n);
+}
+
+$page-width: 40rem;

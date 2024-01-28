@@ -1,0 +1,27 @@
+@mixin init-color {
+  --c-background: #ededed;
+  --c-background-secondary: #dcdcdc;
+  --c-text: #232323;
+  --c-secondary: #727272;
+  --c-link: #0d5ba3;
+  --c-link-press: #0e4179;
+  --c-link-visited: #4b10a3;
+  --c-focus: #778088;
+  @media (prefers-color-scheme: dark) {
+    --c-background: #272727;
+    --c-background-secondary: #303030;
+    --c-text: #dedede;
+    --c-secondary: #949494;
+    --c-link: #6aabe8;
+    --c-link-press: #3179bd;
+    --c-link-visited: #9a6cdf;
+  }
+}
+
+$background: var(--c-background);
+$background-secondary: var(--c-background-secondary);
+$text: var(--c-text);
+$secondary: var(--c-secondary);
+$link: var(--c-link);
+$link-press: var(--c-link-press);
+$link-visited: var(--c-link-visited);

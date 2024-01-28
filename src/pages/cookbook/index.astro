@@ -1,0 +1,60 @@
+---
+import { getCollection } from "astro:content";
+import Standard from "../../layouts/Standard.astro";
+
+const allRecipes = await getCollection("recipes");
+---
+
+<Standard title="Recipes" breadcrumbs={{}}>
+  <ul>
+    {
+      allRecipes.map((recipe) => (
+        <li>
+          <a href={`/cookbook/${recipe.slug}`}>{recipe.data.title}</a>
+        </li>
+      ))
+    }
+  </ul>
+</Standard>
+
+<style lang="scss">
+  @use "../../styles/type.scss";
+  @use "../../styles/space.scss";
+  @use "../../styles/color.scss";
+
+  // TODO: refactor these duplicated styles from PostsList into
+  // a more generic list item component
+
+  a {
+    padding: space.sp(-2) space.sp(-1);
+    border-radius: space.sp(-1);
+    display: flex;
+    gap: 0 space.sp(1);
+    width: 100%;
+    justify-content: space-between;
+    background-color: transparent;
+    margin: 0;
+    text-decoration: none;
+    color: color.$link;
+    &:visited {
+      color: color.$link-visited;
+    }
+    &:hover {
+      background-color: color.$background-secondary;
+      h2 {
+        text-decoration: underline;
+        text-decoration-style: wavy;
+      }
+    }
+    transition: background-color 0.15s ease;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 calc(-#{space.sp(-1)});
+  }
+  li {
+    display: contents;
+  }
+</style>

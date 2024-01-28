@@ -1,0 +1,95 @@
+---
+import Title from "../components/Title.astro";
+import Global from "./_Global.astro";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
+import type { MarkdownHeading } from "astro";
+import Headings from "../components/Headings.svelte";
+
+type BreadcrumbsProps = Parameters<typeof Breadcrumbs>[0];
+
+export interface Props {
+  title: string;
+  breadcrumbs?: BreadcrumbsProps;
+  headings?: MarkdownHeading[];
+}
+const { title, breadcrumbs, headings } = Astro.props;
+---
+
+<Global title={title}>
+  <meta name="og:title" content={title} slot="in-head" />
+  <slot name="in-head" slot="in-head" />
+  <main class={headings ? "has-headings" : ""}>
+    {breadcrumbs && <Breadcrumbs {...breadcrumbs} />}
+    <article>
+      <Title>{title}</Title>
+      <slot />
+    </article>
+    {
+      headings && (
+        <section class="headings">
+          <div>
+            <Headings headings={headings} client:idle />
+          </div>
+        </section>
+      )
+    }
+    <section class="after">
+      <slot name="after-content" />
+    </section>
+  </main>
+</Global>
+
+<style lang="scss">
+  @use "../styles/type.scss";
+  @use "../styles/space.scss";
+  @use "../styles/color.scss";
+
+  main {
+    display: grid;
+    grid-template-columns: 1fr [content-start] minmax(0, 40rem) [content-end] 1fr;
+    gap: space.sp(8) space.sp(4);
+    margin: space.sp(4) 0 space.sp(8);
+
+    > :global(nav) {
+      grid-column: content;
+    }
+    article {
+      grid-column: content;
+    }
+
+    .headings {
+      display: none;
+    }
+
+    .after {
+      grid-column: content;
+    }
+
+    &.has-headings {
+      @media screen and (min-width: 72rem) {
+        grid-template-columns:
+          1fr [content-start] minmax(32rem, 40rem)
+          [content-end headings-start] minmax(8rem, 12rem)
+          [headings-end] 1fr;
+        column-gap: space.sp(6);
+
+        .headings {
+          display: block;
+          grid-column: headings;
+          grid-row: 2;
+          position: sticky;
+          top: 0;
+          max-height: 100vh;
+          padding: space.sp(0) 0;
+          overflow: auto;
+        }
+
+        .after {
+          grid-column: content-start / headings-end;
+        }
+      }
+    }
+
+    @include type.scale(0);
+  }
+</style>

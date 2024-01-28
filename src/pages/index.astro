@@ -1,0 +1,143 @@
+---
+import Global from "../layouts/_Global.astro";
+import PostsList from "../components/PostsList.astro";
+---
+
+<Global>
+  <main>
+    <h1><span>👋</span> Hey, I’m Jordan.</h1>
+    <p>
+      During the day, I’m a Designer II at Microsoft, working to make Excel
+      easier and more useful and to improve the tools Office designers use to
+      get work done.
+    </p>
+    <p>
+      When I’m not at work, you might find me
+      <span class="nobreak">
+        <a href="https://github.com/yoonbuck">
+          🧑‍💻 <span class="underline">writing code</span>
+        </a>,
+      </span>
+      <span class="nobreak">🧑‍🍳 cooking,</span>
+      <span class="nobreak">🎹 playing piano,</span>
+      <span class="nobreak">🇷🇺 learning русский,</span> or (most likely)
+      <span class="nobreak">🛌 sleeping.</span>
+    </p>
+    <p>
+      In Spring 2021, I finished my B.S. in
+      <a href="https://www.hcde.washington.edu/" class="underline"
+        >Human Centered Design and Engineering</a
+      >
+      at the University of Washington.
+    </p>
+    <a href="/" id="email" class="button">email me</a>
+    <noscript>
+      <p>
+        Without javascript, the link above won't work. You can email me at
+        <code>jordan</code> (at) (this domain).
+      </p>
+    </noscript>
+    <script>
+      document.getElementById("email")?.addEventListener("click", function () {
+        (this as HTMLAnchorElement).href =
+          "mailto:" +
+          atob("am9yZGFuX3lvb25idWNrLWNvbQ==")
+            .replace("-", ".")
+            .replace("_", "@");
+      });
+    </script>
+    <h2>Posts</h2>
+    <PostsList />
+  </main>
+</Global>
+
+<style lang="scss">
+  @use "../styles/type.scss";
+  @use "../styles/space.scss";
+  @use "../styles/color.scss";
+
+  h1 {
+    @include type.scale(5);
+    font-weight: 600;
+    margin-bottom: space.sp(3);
+    display: flex;
+    flex-direction: row;
+    gap: space.sp(2);
+  }
+  p,
+  :global(li) {
+    @include type.scale(1);
+    font-weight: 400;
+    margin-bottom: space.sp(1);
+  }
+
+  h2 {
+    @include type.scale(3);
+    font-weight: 600;
+    margin-top: space.sp(4);
+    margin-bottom: space.sp(1);
+  }
+  :global(ul) {
+    margin: 0;
+    padding-left: space.sp(3);
+  }
+  :global(li) {
+    margin-bottom: space.sp(1);
+  }
+
+  main {
+    box-sizing: border-box;
+    width: calc(100% - 2 * #{space.sp(2)});
+    max-width: 36rem;
+    margin: space.sp(8) auto space.sp(4) auto;
+    // font-family: "Shantell Sans", system-ui, sans-serif, "Noto Color Emoji";
+    text-wrap: pretty;
+  }
+
+  .nobreak {
+    display: inline-block;
+  }
+
+  :global(a) {
+    color: color.$link;
+    text-decoration: none;
+    &:visited {
+      color: color.$link-visited;
+    }
+    .nobreak & {
+      display: inline-block;
+    }
+  }
+
+  .underline {
+    text-decoration: underline;
+    text-decoration-style: wavy;
+  }
+
+  a.button {
+    font: inherit;
+    @include type.scale(0);
+    font-weight: 580;
+    display: inline-block;
+    line-height: 1;
+    padding: space.sp(-1) space.sp(1);
+    border: space.sp(-5) solid color.$link;
+    text-decoration: none;
+    color: color.$link;
+    background-color: transparent;
+    border-radius: 100rem;
+    transition:
+      color 200ms ease,
+      background-color 200ms ease,
+      border-color 200ms ease;
+    &:hover {
+      background-color: color.$link;
+      color: color.$background;
+    }
+    &:active {
+      background-color: color.$link-press;
+      border-color: color.$link-press;
+      color: color.$background;
+    }
+  }
+</style>

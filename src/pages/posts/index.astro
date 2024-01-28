@@ -1,0 +1,13 @@
+---
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import PostsList from "../../components/PostsList.astro";
+import { getTags } from "../../content/posts/tags";
+import Standard from "../../layouts/Standard.astro";
+
+const tags = await getTags();
+---
+
+<Standard title="Posts" breadcrumbs={{}}>
+  <Breadcrumbs tagsOnly tags={tags} />
+  <PostsList />
+</Standard>

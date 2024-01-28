@@ -1,0 +1,94 @@
+---
+import { getCollection } from "astro:content";
+import DateFormat from "./DateFormat.svelte";
+
+interface Props {
+  min?: number;
+  max?: number;
+  byTag?: string;
+}
+
+const { min = 0, max = Infinity, byTag = undefined } = Astro.props;
+const posts = await getCollection(
+  "posts",
+  byTag ? (entry) => entry.data.tags?.includes(byTag) : undefined
+);
+
+// reverse chronological order
+posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<ul>
+  {
+    posts.map(
+      (post, i) =>
+        i >= min &&
+        i < max && (
+          <li>
+            <a href={`/post/${post.slug}`}>
+              <h2>{post.data.title}</h2>
+              <span class="date">
+                <DateFormat
+                  format="monthYear"
+                  date={post.data.date}
+                  client:idle
+                />
+              </span>
+            </a>
+          </li>
+        )
+    )
+  }
+</ul>
+
+<style lang="scss">
+  @use "../styles/type.scss";
+  @use "../styles/space.scss";
+  @use "../styles/color.scss";
+
+  h2 {
+    font-size: inherit;
+    line-height: inherit;
+    font-weight: normal;
+    display: inline;
+  }
+
+  a {
+    padding: space.sp(-2) space.sp(-1);
+    border-radius: space.sp(-1);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 space.sp(1);
+    width: 100%;
+    justify-content: space-between;
+    background-color: transparent;
+    margin: 0;
+    text-decoration: none;
+    color: color.$link;
+    &:visited {
+      color: color.$link-visited;
+    }
+    &:hover {
+      background-color: color.$background-secondary;
+      h2 {
+        text-decoration: underline;
+        text-decoration-style: wavy;
+      }
+    }
+    transition: background-color 0.15s ease;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 calc(-#{space.sp(-1)});
+  }
+  li {
+    display: contents;
+  }
+
+  .date {
+    color: color.$secondary;
+    text-decoration: none;
+  }
+</style>
