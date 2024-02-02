@@ -6,6 +6,7 @@ description: Seeking an approach to color inversion that preserves contrast rati
 ---
 
 import Demo from "./Demo.svelte";
+import ImageInverter from "./ImageInverter.svelte";
 import Info from "../../../components/Info.astro";
 import Spoiler from "../../../components/Spoiler.svelte";
 
@@ -186,7 +187,7 @@ The remaining step is to "apply" the inverted relative luminance back to the ori
 
 It seems quite possible there is a more efficient way to do this, which I will leave as an exercise for the reader.
 
-## Demo
+# Demo
 
 As before, this widget demonstrates the effect of the new inversion algorithm on colors and their contrast ratios.
 
@@ -198,11 +199,15 @@ The code used to implement the algorithm in this demo [is available here][gist].
 
 [gist]: https://gist.github.com/yoonbuck/c8cfd26245d8e2d6b6870b396dc450b2
 
+## Image inversion
+
+<ImageInverter client:only />
+
 # Applications
 
-I believe the primary use case for this new inversion approach is inverting colors to facilitate "dark mode" content themes. In particular, contrast preserving color inversion can be used to invert documents or other user-generated content.
+One use case for this new inversion approach is inverting colors to facilitate "dark mode" content themes. In particular, contrast preserving color inversion can be used to invert documents or other user-generated content.
 
-For example, a word processing document could provide an inverted mode to facilitate comfortable reading in a dark environment, with background and text colors inverted, but with images and other content left unaltered, and without reducing accessibility by changing the contrast ratios between colors as other inversion approaches do.
+For example, a WYSIWYG word processing document could provide an inverted mode to facilitate comfortable reading in a dark environment, with background and text colors inverted, but with images and other content left unaltered, and without reducing accessibility by changing the contrast ratios between colors as other inversion approaches do.
 
 Or, a browser extension could use this algorithm to invert colors on web pages in a way that preserves the contrast ratios between colors.
 
